@@ -4,31 +4,31 @@ module spi
     parameter  depth = 'd8     //数据传输个数
 )
 (	
-    input 				clk			    ,
-	input 				rst_n		    ,
-	input 				CS_N		    ,
-	input 				SCK			    ,
-	input 				MOSI		    ,  //FPGA数据输入
-    input 	    [31:0]  sending_data0   ,
-    input 	    [31:0]  sending_data1   ,
-    input 	    [31:0]  sending_data2   ,
-    input 	    [31:0]  sending_data3   ,
-    input 	    [31:0]  sending_data4   ,
-    input 	    [31:0]  sending_data5   ,
-    input 	    [31:0]  sending_data6   ,
-    input 	    [31:0]  sending_data7   ,
+    input   wire            clk             ,
+	input   wire            rst_n           ,
+	input   wire            CS_N            ,
+	input   wire            SCK             ,
+	input   wire            MOSI            ,  //FPGA数据输入
+    input   wire    [31:0]  sending_data0   ,
+    input   wire    [31:0]  sending_data1   ,
+    input   wire    [31:0]  sending_data2   ,
+    input   wire    [31:0]  sending_data3   ,
+    input   wire    [31:0]  sending_data4   ,
+    input   wire    [31:0]  sending_data5   ,
+    input   wire    [31:0]  sending_data6   ,
+    input   wire    [31:0]  sending_data7   ,
     
-    output reg 			MISO		    ,  //FPGA数据输出
-    output reg			mark            ,  //单个数据传输完成标志
-    output reg			end_mark        ,  //整体传输完成标志
-    output reg 	[31:0]	receive_data0   ,
-    output reg 	[31:0]	receive_data1   ,
-    output reg 	[31:0]	receive_data2   ,
-    output reg 	[31:0]	receive_data3   ,
-    output reg 	[31:0]	receive_data4   ,
-    output reg 	[31:0]	receive_data5   ,
-    output reg 	[31:0]	receive_data6   ,
-    output reg 	[31:0]	receive_data7   
+    output  reg 			MISO            ,  //FPGA数据输出
+    output  reg             mark            ,  //单个数据传输完成标志
+    output  reg             end_mark        ,  //整体传输完成标志
+    output  reg     [31:0]  receive_data0   ,
+    output  reg     [31:0]  receive_data1   ,
+    output  reg     [31:0]  receive_data2   ,
+    output  reg     [31:0]  receive_data3   ,
+    output  reg     [31:0]  receive_data4   ,
+    output  reg     [31:0]  receive_data5   ,
+    output  reg     [31:0]  receive_data6   ,
+    output  reg     [31:0]  receive_data7   
 );	
 //SPI数据发送宽度和深度的定义
 //根据实际收发数据的宽度和深度定义width和depth
@@ -44,7 +44,7 @@ if(!rst_n)
     txd_data <= 'd0;
 else begin
         txd_data[width-1:0]     <= sending_data0;
-        txd_data[width*'d2-1:width*'d1] <= sending_data1;
+        // txd_data[width*'d2-1:width*'d1] <= sending_data1;
         // txd_data[width*'d3-1:width*'d2] <= sending_data2;
         // txd_data[width*'d4-1:width*'d3] <= sending_data3;
         // txd_data[width*'d5-1:width*'d4] <= sending_data4;
@@ -54,7 +54,7 @@ else begin
         
         // 接收数据（8个，与发送对应）
         receive_data0 <= rxd_data[ width*(depth-0) - 1 : width*(depth-0-1) ];
-        receive_data1 <= rxd_data[ width*(depth-1) - 1 : width*(depth-1-1) ];
+        // receive_data1 <= rxd_data[ width*(depth-1) - 1 : width*(depth-1-1) ];
         // receive_data2 <= rxd_data[ width*(depth-2) - 1 : width*(depth-2-1) ];
         // receive_data3 <= rxd_data[ width*(depth-3) - 1 : width*(depth-3-1) ];
         // receive_data4 <= rxd_data[ width*(depth-4) - 1 : width*(depth-4-1) ];
