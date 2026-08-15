@@ -1,0 +1,262 @@
+# ============================================================
+# 嵌入式开发通用 .gitignore 模板
+# 适用：STM32（Keil MDK / IAR / GCC / STM32CubeIDE）
+#       + FPGA（Intel Quartus） + 常用 IDE
+# 用法：复制本文件到项目根目录，重命名为 .gitignore
+#       然后执行 git status 验证忽略效果
+# ============================================================
+
+
+# ==================== 第一部分：STM32 / MCU 通用 ====================
+
+# CubeMX 生成缓存（工具内部数据，可重新生成）
+.mxproject.bak
+
+# ARM 编译产物（通用）
+*.o
+*.obj
+*.elf
+*.axf
+*.bin
+*.hex
+*.lst
+*.map
+*.crf
+*.d
+*.dep
+*.lnp
+*.htm
+*.sct
+*.build_log.htm
+
+# 链接与调试产物
+*.uvguix.*
+*.bak
+*.tmp
+*~
+
+
+# ==================== 第二部分：Keil MDK（ARM） ====================
+
+# Keil 编译输出目录
+MDK-ARM/Objects/
+MDK-ARM/Listings/
+MDK-ARM/DebugConfig/
+MDK-ARM/RTE/
+MDK-ARM/CreateFlashImage/
+MDK-ARM/*.dep
+MDK-ARM/*.uvguix.*
+MDK-ARM/*.uvoptx
+MDK-ARM/*.lst
+
+# Keil 工程内部生成目录（同名子目录下的 .o/.crf/.d 等，用 ** 覆盖任意层级）
+**/Objects/
+**/Listings/
+**/DebugConfig/
+
+# 注意：MDK-ARM/*.uvprojx（工程文件）要保留！
+# 注意：startup_*.s、*.sct 若是手写/定制要保留
+
+
+# ==================== 第三部分：IAR EWARM ====================
+
+# IAR 编译输出
+Debug/
+Release/
+DebugExe/
+ReleaseExe/
+settings/
+*.eww
+*.ewt
+*.wsdt
+*.dep
+*.pbd
+*.pbi
+*.pdb
+*.sim
+*.log
+*.map
+*.out
+*.srec
+*.icf.bak
+# 注意：*.icf（链接脚本）要保留！
+# 注意：*.ewp / *.eww（工程文件）要保留！
+
+
+# ==================== 第四部分：STM32CubeIDE / Eclipse ====================
+
+# STM32CubeIDE 构建与配置目录
+Debug/
+Release/
+*.launch
+.metadata/
+.settings/
+.externalToolBuilders/
+build/
+# 注意：*.ioc（CubeMX 配置）要保留！
+
+
+# ==================== 第五部分：FPGA - Intel Quartus ====================
+
+# Quartus 编译数据库（体积大，重新编译自动生成）
+db/
+incremental_db/
+greybox_tmp/
+c5soc_*
+*.done
+*.qdf
+*.rpt
+*.pin
+*.smsg
+*.summary
+*.map.rpt
+*.fit.rpt
+*.sta.rpt
+*.flow.rpt
+
+# Quartus 编译输出（烧录文件、报告）
+output_files/
+*.sof
+*.pof
+*.jic
+*.rbf
+*.jbc
+*.jam
+*.cdf
+
+# Quartus IP / 系统生成
+*.sopcinfo
+*.qsys.ip
+synthesis_submodules/
+qdb/
+
+# Quartus 仿真生成物（ModelSim / Questa）
+simulation/
+sim/
+work/
+transcript
+*.wlf
+*.vcd
+*.mpf
+*.vsim.wlf
+vsim.wlf
+modelsim.ini
+# 注意：*.qpf / *.qsf / *.qsys / *.sdc / *.v / *.sv / *.vhd 要保留！
+
+
+# ==================== 第六部分：Xilinx Vivado（顺手备用） ====================
+
+*.jou
+*.log
+*.str
+*.bit
+*.bin
+*.runs
+*.cache
+*.hw
+*.ip_user_files
+*.sim
+*.gen
+*.srcs
+.vivado/
+# 注意：*.xpr（工程文件）要保留！
+
+
+# ==================== 第七部分：IDE / 编辑器 ====================
+
+# VS Code
+.vscode/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+*.code-workspace
+
+# VS / VS Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains（CLion 等）
+.idea/
+*.iml
+out/
+cmake-build-*/
+
+# Eclipse
+.settings/
+.project
+.classpath
+.metadata/
+
+# Keil / IAR 个人界面配置
+*.uvguix.*
+*.wsdt
+
+
+# ==================== 第八部分：构建系统 ====================
+
+# CMake
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# GCC / ARM GCC
+*.gcda
+*.gcno
+
+
+# ==================== 第九部分：仿真与调试 ====================
+
+# Ozone / J-Link / OpenOCD 等调试器产物
+JLinkLog.txt
+JLinkSettings.ini
+*.jlink
+*.svd~
+
+
+# ==================== 第十部分：敏感信息（⚠️ 务必忽略） ====================
+
+.env
+*.key
+*.pem
+*.pfx
+*.p12
+secrets.*
+config.private.*
+
+
+# ==================== 第十一部分：系统 / 杂项 ====================
+
+# Windows
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Linux
+*.swp
+*.swo
+*~
+
+# 压缩包 / 大文件（避免仓库膨胀）
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.iso
+*.img
+*.lib.bak
+
+# 临时
+*.tmp
+*.log
