@@ -1,114 +1,116 @@
 module top
 (
-    input   wire                    clk         , //时钟(采样时钟)
-    input   wire                    rst_n       , //复位信号
-    input   wire                    dco         , //数据同步时钟
-    input   wire    signed  [11:0]  data_in     , //AD数据输入
-    input   wire                    CS_N        ,
-    input   wire                    SCK         ,
-    input   wire                    MOSI        ,
-        
-    output  wire                    AD9233_clk  , //输出到AD9233的时钟
-    output  wire                    pwd_n       , //电源使能 1：ADC断电     0：ADC正常工作
-    output  wire                    oeb_n       , //时钟使能 1：关闭输出时钟  0：开启输出时钟   
-    output  wire                    AD_sclk     , //SPI_SCLK
-    output  wire                    AD_cs_n     , //SPI_CS
-    output  wire                    AD_mosi     , //SPI数据线
-    output  wire                    MISO
-);
-
-wire    signed  [11:0]  data_out;
-wire    [11:0]  us_data;
-wire    resultl;
-wire    clk_stand;
-wire    [31:0]  cnt_stand_reg;
-wire    [31:0]  cnt_test_reg;
-
-assign us_data = data_out + 'd2048;
-
-AD9233
-#(
-    .VERF_SEL (2'd3)   //设置参考电压
-)AD9233_inst
-(
-    .clk         (clk        ), //时钟(采样时钟)
-    .rst_n       (rst_n      ), //复位信号
-    .dco         (dco        ), //数据同步时钟
-    .data_in     (data_in    ), //AD数据输入
-                  
-    .AD9233_clk  (AD9233_clk ), //输出到AD9233的时钟
-    .pwd_n       (pwd_n      ), //电源使能 1：ADC断电     0：ADC正常工作
-    .oeb_n       (oeb_n      ), //时钟使能 1：关闭输出时钟  0：开启输出时钟   
-    .AD_sclk     (AD_sclk    ), //SPI_SCLK
-    .AD_cs_n     (AD_cs_n    ), //SPI_CS
-    .AD_mosi     (AD_mosi    ), //SPI数据线
-    .data_out    (data_out   )
-);
-
-comparator  //比较器模块
-#(
-    .LIMIT ('d2048)    //比较阈值
-)comparator_inst
-(
-    .clk     (clk     ),  //系统时钟
-    .rst_n   (rst_n   ),  //复位信号
-    .data_in (us_data ),  //数据输入
-              
-    .result  (result  )   //比较结果
-);
-
-freq_meter freq_meter_inst
-(
-    .sys_clk         (clk),   //系统时钟,50MHz
-    .sys_rst_n       (rst_n),   //复位信号
-    .clk_test        (result),   //待检测时钟
-    .clk_stand       (clk_stand),   //标准时钟,100MHz
+    input   wire            clk         ,  //系统时钟
+    input   wire            rst_n       ,  //复位信号
+    input   wire    [11:0]  data_in_A   ,  //通道A数据输入
+    input   wire    [11:0]  data_in_B   ,  //通道B数据输入
+    input                           CS_N        , // 片选信号
+    input                           SCK         , // 时钟信号
+    input                           MOSI        , // 主发从收数据线
     
-    .cnt_stand_reg   (cnt_stand_reg),   //闸门内标准时钟周期数
-    .cnt_test_reg    (cnt_test_reg),   //闸门内待检测时钟周期数
-    .measure_done    ()    //测量完成标志 
+    output wire                     MISO        , // 主收从发数据线
+    output  wire            clk_A       ,  //输出到A通道的时钟
+    output  wire            clk_B          //输出到B通道的时钟
 );
 
-phase_meter phase_meter_inst
+wire    [11:0]  data_out_A;
+wire    [11:0]  data_out_B;
+wire    [11:0]  pll_200m;
+wire    [15:0]  cos_phase;
+wire    [31:0]  sending_data;
+wire    [31:0]  receive_data1;
+wire    [31:0]  receive_data2;
+wire    [31:0]  receive_data3;
+wire    [31:0]  receive_data4;
+
+assign sending_data = {16'b0,cos_phase};
+
+pll	pll_inst (
+	.areset ( !rst_n ),
+	.inclk0 ( clk ),
+	.c0 ( pll_200m )
+	);
+
+AD9226  AD9226_inst
 (
-    .clk         (clk),  //时钟信号
-    .rst_n       (rst_n),  //复位信号
-    .signal_test (result),  //待检测的信号
-    
-    .time_cnt_reg()   //时间计数器
+    .clk         (clk      ),  //系统时钟
+    .rst_n       (rst_n    ),  //复位信号
+    .data_in_A   (data_in_A),  //通道A数据输入
+    .data_in_B   (data_in_B),  //通道B数据输入
+             
+    .clk_A       (clk_A     ),  //输出到A通道的时钟
+    .clk_B       (clk_B     ),  //输出到B通道的时钟
+    .data_out_A  (data_out_A),  //通道A处理后数据输出
+    .data_out_B  (data_out_B)   //通道B处理后数据输出
 );
 
-spi
+phase_meter 
 #(
-    .width ('d32)  ,  //数据传输位数
-    .depth ('d2 )     //数据传输个数
-)spi_inst
+    .WIDTH      (12)     ,
+    .AVG_BITS   (25)  
+)phase_meter_inst
+(
+    .clk         (clk  ),
+    .rst_n       (rst_n),
+    .wave_A      (data_out_A),
+    .wave_B      (data_out_B),
+    
+    .cos_phase   (cos_phase),
+    .data_vld    () 
+);
+
+spi_top #(
+    .width (32) , // 单帧数据宽度（16的整数倍）
+    .depth (1 )   // width位宽数据的数量
+)spi_top_inst
 (	
-    .clk			(clk	)    ,
-	.rst_n		    (rst_n	),
-	.CS_N		    (CS_N	),
-	.SCK			(SCK	)    ,
-	.MOSI		    (MOSI	),  //FPGA数据输入
-    .sending_data0  () ,
-    .sending_data1  () ,
-    .sending_data2  () ,
-    .sending_data3  () ,
-    .sending_data4  () ,
-    .sending_data5  () ,
-    .sending_data6  () ,
-    .sending_data7  () ,
+    .receive_data({
+                    receive_data1
+                    }), // 输出接收数据
+    .sending_data({
+                  sending_data 
+                  }), // 输入发送数据
+    .clk         (pll_200m ), // 系统时钟
+    .rstn        (rst_n), // 复位信号
+    .CS_N        (CS_N), // 片选信号
+    .SCK         (SCK ), // 时钟信号
+    .MOSI        (MOSI), // 主发从收数据线
+    .MISO        (MISO), // 主收从发数据线
+    .mark        (), // 16bit数据传输完成标志
+    .end_mark    ()  // 整体传输完成标志
+);
+
+// spi
+// #(
+    // .width ('d32)  ,  //数据传输位数
+    // .depth ('d4 )     //数据传输个数
+// )spi_inst
+// (	
+    // .clk             (clk  ),
+	// .rst_n           (rst_n),
+	// .CS_N            (CS_N ),
+	// .SCK             (SCK),
+	// .MOSI            (MOSI),  //FPGA数据输入
+    // .sending_data0   (sending_data),
+    // .sending_data1   ('d0),
+    // .sending_data2   ('d0),
+    // .sending_data3   ('d0),
+    // .sending_data4   (),
+    // .sending_data5   (),
+    // .sending_data6   (),
+    // .sending_data7   (),
     
-    .MISO		    (MISO),  //FPGA数据输出
-    .mark           () ,  //单个数据传输完成标志
-    .end_mark       () ,  //整体传输完成标志
-    .receive_data0  () ,
-    .receive_data1  () ,
-    .receive_data2  () ,
-    .receive_data3  () ,
-    .receive_data4  () ,
-    .receive_data5  () ,
-    .receive_data6  () ,
-    .receive_data7  () 
-);	
+    // .MISO            (MISO),  //FPGA数据输出
+    // .mark            (),  //单个数据传输完成标志
+    // .end_mark        (),  //整体传输完成标志
+    // .receive_data0   (),
+    // .receive_data1   (),
+    // .receive_data2   (),
+    // .receive_data3   (),
+    // .receive_data4   (),
+    // .receive_data5   (),
+    // .receive_data6   (),
+    // .receive_data7   ()
+// );	
 
 endmodule
